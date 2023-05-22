@@ -1,0 +1,113 @@
+Vulnerability - Consists of an attacker tampering with the SQL queries that an application makes to a database
+
+*** Impact ***
+
+- Confidentiality - SQLi can be used to view sensitive information such as application usernames and passwords
+- Integrity - SQLi can be used to alter data in the database
+- Availability - SQLi can be used to delete data in the database
+- Possible remote code execution on the underlying OS
+
+
+*** Types of SQLi ***
+
+- In-Band (Classic) - Attacker uses the same channel to launch attack and gather results -> Error Based, Union Based
+- Inferential (Blind) - No actual transfer of data from the application -> Boolean, Time
+- Out-of-band - When attacker is unable to use the same channel to launch and gather results of the attack -> network or dns connection
+
+*** In-Band SQLi
+
+- Occurs when an attacker uses the same communication channel to both launch the attack and gather the result of the attack
+- Retrieved data is presented directly in the application web page
+- Error-Based SQLi - an in-band SQLi technique that forces the database to generate an error, yielding more information to the attacker which can then be used to refine the attack
+- Union-Based SQLi - an in-band SLQi technique that leverages the UNION SQL operator to combine the results of 2 queries into a single result set
+
+
+*** Inferential (Blind) SQLi
+
+- Here, there is no actual transfer of data via the web application
+- Just as worse as in-band SQLi
+- The attacker can reconstruct the information by sending particular requests and observing the resulting behaviour of the DB server
+- Boolean-Based SQLi - technique uses the Boolean conditions to return a different result depending on whether the query returns a TRUE or FALSE result
+- Time-Based SQLi - a blind SQLi technique that relies on the database pausing for a specified amount of time then returning the results indicating a successful SQL query execution
+
+
+*** Out-Of-Band (OAST) SQLi
+
+- Vulnerability that consists of triggering an out-of-band network connection to a system that you control
+- Not a common technique
+- A variety of protocols can be used e.g. DNS, HTTP
+
+
+*** How to Find SQLi Vulnerabilities
+
+- Methodology is developed through experience - Depends of the perspective of testing
+- We have black box testing and white box testing approaches
+
+
+*** Black-Box Testing Perspective
+
+- Map the application - generally figure out the application, input vectors, enumerate etc.
+- Fuzz the application - submit SQL-specific characters such as ' or " to spot errors or anomalies
+                       - submit Boolean conditions such as OR 1=1 and OR 1=2 to spot differeneces in the application responses
+                       - submit payloads designed to trigger time delays when executed within a SQL query and look for differences in the time taken to respond
+                       - submit OAST payloads designed to trigger an out-of-band network interaction when executed within an SQL query and monitor for any resulting interactions
+
+
+*** White-Box Testing Perspective
+
+- Enable Web Server Logging
+- Enable Database Logging
+- Map the application - visible functionality in the application
+                      - regex search on all instances in the code that talk to the database
+- Code review - Follow the code path for all input vectors
+- Test any potential SQLi vulnerabilities
+
+
+*** How to Exploit SQLi Vulnerabilities
+
+1. Exploiting Error-Based SQLi
+
+- Submit SQL-specific characters such as ' or " and look for errors or other anomalies
+- Different characters can give you different errors
+
+2. Exploiting Union-Based SQLi
+
+- There are 2 rules for combining the result sets of 2 queries by using UNION - The number & order of the columns must be the same in all queries
+                                                                              - The data types must be compatible
+- Exploitation
+              - Figure out the number of columns that the query is using -  ORDER BY or NULL VALUES
+              - Figure the data types of the columns (mainly interested in string data) - probe each column to test whether it can hold string data
+              - Use the UNION operator to output information from the database
+
+3. Exploiting Boolean-Based Blind SQLi
+
+- Submit a Boolean condition that evaluates to FALSE and note the response
+- Submit a Boolean condition that evaluates to TRUE and note the response
+- If the responses vary, then there is a possible Boolean based SQLi
+- Write a program that uses conditional statements to ask the database a series of True / False questions and monitor response
+
+4. Exploiting Time-Based Blind SQLi
+
+- Submit a payload that pauses the application for a specified period of time and observe the response
+- Write a program that uses conditional statements to ask the database a series of TRUE / FALSE questions and monitor response time
+- If there is a delay in response time, then the query you are asking the database is true else false
+
+5. Exploiting Out-of-Band SQLi
+
+- Submit OAST payloads designed to trigger an out-of-band network interaction when executed within an SQL query and monitor for any resulting interactions
+- Depending on the SQLi injection, use different methods to exfil data
+
+*** Automated Exploitation Tools ***
+
+1. sqlmap - https://github.com/sqlmapproject/sqlmap
+2. Web Application Vulnerability Scanners (WAVS) - Acunetix, W3AF, Wapiti, Burpsuite, Arachni, Zaproxy - These are dynamic analysis tools
+
+
+*** Preventing SQLi Vulnerabilities
+
+- Use of prepared statements (Parameterized Queries)
+- Use of stored procedures (Partial) - Batch of statements grouped together and stored in the database (Still needs to be parameterized)
+- Whitelist Input Validation (Partial) - Define what values are authorized
+- Escaping all user supplied input (Partial)
+- Enforcing least privilege - Application should use the lowest possible privileges when accessing the database, disable unnecessary defaults, Implement database CIS benchmarks, apply patches timely
+- Perform whitelist input validation as a secondary defense

