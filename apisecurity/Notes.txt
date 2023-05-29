@@ -1,0 +1,164 @@
+*** Introduction
+
+- APIs have a unique risk profile - they are more transparent that websites
+- There are private, public and partner APIs
+- API domain - Developers, Administrators, End useBreedList
+- API risks are documented under OWASP
+- Protection - Rate limiting, Message Validation, Encryption & Signing (At trasport/message level), Access Control
+- TLS Trust Attacks - CA Vulnerabilities, Human vulnerabilities, MiTM
+- HTTP Access Controls - Basic Authentication (username/password, Base64 encoded, creds in plain text), Digest Authentication (Encryption, Vulnerable to MiTM)
+- Best practices - security (Authentication & Authorization), Protection(OWASP), Throttling, Monitoring, Payload validation, Proper Error Handling
+
+*** Introduction to OAuth 2.0
+
+- OAuth 2.0 - an industyr standard authorization protocol
+- OAuth is not an Authentication protocol - It is a delegated access framework for web resources
+- Permits a user to grant an application access to a protected resource without exposing the user's password credentials
+- An OAuth access token is issued and accepted for user authorization at the API endpoint
+- OAuth 2.0 is complex because the specification is less prescritptive
+
+*** Grant Types
+
+- Authorization Code - Client exchanges the authorization code for an access token
+- Implicit - Client is issued an access token directly in the return URL (optimized for JS SPAs)
+- Resource Owner Password credentials - Only username and password is required
+- Client Credentials - Authorization scope is limited to the protected resources under the client's control or as previoudly arranged with the authorization server (Non-interactive apps)
+- Each grant type is optimized for a particular use case
+- Use Info Endpoint is also part of the protected OAuth resources - provides more information about the end user
+
+*** OAuth 2.0 Doesn't Define
+
+- What tokesn should look like (This gap is filled by the OpenID Connect)
+- How the resource server and suthoriozation server interact
+- How the client registers with the authorization server
+- How authroization endpoints are discovered
+- The semantics of authorization scope
+- Leaving so much decision making to the implementer increases the possibility of security vulnerabilities & interoperability issues
+- However, this has made it possible to build new specifications on the OAuth framework - Such as OpenID Connect 
+
+*** OAuth 2.0 Downsides
+
+- Cannot authenticate the bearer of the access token
+- Access token does not contain user information
+- Trust is assumed for anyone who presents the token
+
+*** OpenID Connect ((Identity Layer))
+
+- Designed to be an authentication and identity protocol
+- Offers a standardized and prescriptive method for delegated authentications
+- Provides authorized access to identity
+- Not to be confused with OpenID 2.0
+- Complements OAuth 2.0 - It's authentication flow is based on OAuth 2.0. OAuth 2.0 excesl at delegated authorization
+- OpenID Connect applies OAuth to an identiy resource
+- Identity - A set of attributes (bag of values)
+- Main difference is that in addition to the access token, the ID token is also issued and used in the authentication flow.
+- This enables the client application to retrieve resources on behalf of the resource onwer
+- Servers as an authentication layer on the API security stack
+- OpenID Connect Protocol Suite has 3 implementation levels - Minimal, Dynamic, Complete
+- Implementation level depends on the required complexity or use case of your authentication process
+- The ID token acts like an encrypted fingerprint
+- It can then be decoded to reveal user information for identity verification
+
+*** ID Tokens
+
+- New OAuth token defined in the OpenID Connect
+- JWT containing claims about authentication status of the end user
+- Indicates the status of authentication
+
+*** Access Tokens
+
+- Original OAuth token
+- Provides access to identity resource
+- Can be used by client to retrieve additional user information
+
+*** Miminal Implementation
+
+- Core specification that provides a set os standard claims that can be requested by the client application to obtaion information about the end user
+- Contains all core components of OpenID Connect specifications
+
+*** Dynamic Implementation
+
+- Builds on top of the minimal/core specifications
+- Contains discovery specifications (OpenID Provider) and dynamic client registration client specifications
+
+*** Complete Implementation
+
+- Includes the session amanagement specifications on top of the minimal and dynamic specifications
+
+
+*** JSON Web Tokens (JWTs)
+
+- Forms part of JavaScript Object Signing and Encryption framework such as:
+        > JWT (JSON WEB Token)
+        > JWS (JSON Web Signature)
+        > JWE (JSON Web Encryption)
+        > JWA (JSON Web Algorithms)
+        > JWK (JSON Web Key)
+
+- When a JWT is signed, it verifies the integrity of the claims contained within it.
+- Encryption then hides these claims from other parties
+- Once encrypted, a signed JWT becomes a payload (JWE object)
+- Encrypted JWTs are signed using public/private key pairs
+- Encrypted first with the private key of tha authorization server, then encrypted either with public key of the recipient or a secret pre-shared key
+
+*** Anatomy of JWT
+
+- Header - Specifies authorization and Signature - Identifies the algorith used to generate the signature
+- Payload - Specifies standard and custom claims
+- Signature - Elaborates the mechanism used to sign the JWT (Encoding algorithm)
+
+*** JWT Characteristics
+
+- Supports signature and Encryption
+- Stateless and self-contained
+- Compact and easily passed around
+- Programming-language agnostic, common data formData (protocol versatility)
+- Ideal for REST/HTTP APIs
+
+*** JWT Challenges & Mitigations 
+
+- Token revocation and management - Shorter timeouts, token refresh vs recreation, revocation lists
+- Token security, vulnerabilities
+- Overhead and performance
+
+*** OAuth 2.0 Threats
+
+- Client and client secrets
+- Authorization and resource endpoints
+- Authorization and refresh Tokens
+
+*** Client Threat Models
+
+- Attacker obtaining client secrets
+- Attacker obtaining access and refresh tokens
+- Attacker phishing for credentials using compromised or embedded browser
+- Open redirection on the client
+- Recommendations - Implement access Controls
+
+*** Endpoint Threat Models
+
+- Phishing by counterfeit authorization server
+- Interception of traffic to resource server
+- User unintentionally grants too much access scope
+- Malicious client obtains existing authorization by fraud
+- Open redirection
+- Recommendations - Cerificate Pinning (FRC 7469), Whitelisting Redirect URIs, Proof Key for Code Exchange (RFS 7636)
+
+*** Token Threat Models
+
+- Eavesdropping access tokens
+- Obtaining access tokens from authorization server database
+- Disclosure of client credentials during transmission
+- Obtaining client secret from authorization server database
+- Obtaining client secret by online guessing
+- Recommendations - Token Binding (TFCs 8471, 8473, 7800)
+
+*** Resources
+
+- https://tools.ietf.org/html/rfc7519
+- https://tools.ietf.org/html/rfc8725
+- https://tools.ietf.org/html/rfc7523
+- https://www.iana.org/assignments/jwt/jwt.xhtml
+
+
+
